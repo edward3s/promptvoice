@@ -6,7 +6,6 @@ import AppKit
 
 struct ContentView: View {
     @Bindable var model: DictationModel
-    @State private var selection: TextSelection?
     @State private var showSettings = false
 
     private var engine: SpeechEngine { model.engine }
@@ -74,7 +73,7 @@ struct ContentView: View {
 
     private var draftCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TextEditor(text: $model.draft, selection: $selection)
+            TextEditor(text: $model.draft)
                 .font(.system(size: 17))
                 .foregroundStyle(.white.opacity(0.95))
                 .scrollContentBackground(.hidden)
@@ -106,10 +105,6 @@ struct ContentView: View {
                         )
                 )
         )
-        .contentShape(Rectangle())
-        .onTapGesture {
-            selection = TextSelection(insertionPoint: model.draft.endIndex)
-        }
     }
 
     private var liveText: some View {
@@ -275,7 +270,6 @@ struct ContentView: View {
                         ForEach(model.history.entries.prefix(6)) { entry in
                             Button {
                                 model.use(entry)
-                                selection = TextSelection(insertionPoint: model.draft.endIndex)
                             } label: {
                                 HStack(spacing: 10) {
                                     Text(entry.text)
@@ -372,6 +366,10 @@ struct SettingsView: View {
                         }
                     }
                     Toggle("Copiar al terminar", isOn: $model.autoCopy)
+                    Toggle("Vaciar el borrador al terminar", isOn: $model.clearAfterDictation)
+                    Text("Un dictado = un prompt: el cuadro queda limpio para el siguiente. El texto sigue en el portapapeles y en Recientes.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
 
                 #if os(macOS)

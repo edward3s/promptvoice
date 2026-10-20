@@ -25,6 +25,10 @@ final class DictationModel {
     var autoPaste: Bool {
         didSet { defaults.set(autoPaste, forKey: Keys.autoPaste) }
     }
+    /// Vaciar el borrador al terminar cada dictado (un dictado = un prompt).
+    var clearAfterDictation: Bool {
+        didSet { defaults.set(clearAfterDictation, forKey: Keys.clearAfterDictation) }
+    }
 
     /// Atajo global para empezar/parar el dictado (solo macOS).
     var hotKey: HotKey {
@@ -44,6 +48,7 @@ final class DictationModel {
         static let localeID = "localeID"
         static let autoCopy = "autoCopy"
         static let autoPaste = "autoPaste"
+        static let clearAfterDictation = "clearAfterDictation"
         static let hotKeyKeyCode = "hotKeyKeyCode"
         static let hotKeyModifiers = "hotKeyModifiers"
     }
@@ -52,6 +57,7 @@ final class DictationModel {
         localeID = defaults.string(forKey: Keys.localeID) ?? ""
         autoCopy = defaults.object(forKey: Keys.autoCopy) as? Bool ?? true
         autoPaste = defaults.object(forKey: Keys.autoPaste) as? Bool ?? true
+        clearAfterDictation = defaults.object(forKey: Keys.clearAfterDictation) as? Bool ?? true
 
         if let keyCode = defaults.object(forKey: Keys.hotKeyKeyCode) as? Int,
            let modifiers = defaults.object(forKey: Keys.hotKeyModifiers) as? Int {
@@ -84,13 +90,16 @@ final class DictationModel {
         let text = await engine.stop()
         guard !text.isEmpty else { return }
 
-        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        draft = trimmed.isEmpty ? text : trimmed + " " + text
         history.add(text)
         Platform.stopFeedback()
 
-        if autoCopy {
-            copy(draft, feedback: false)
+        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let prompt = trimmed.isEmpty ? text : trimmed + " " + text
+
+        // El texto tiene que acabar en el portapapeles si se va a pegar (automática o manualmente).
+        let delivers = autoCopy || autoPaste
+        if delivers {
+            copy(prompt, feedback: false)
         }
 
         #if os(macOS)
@@ -99,6 +108,10 @@ final class DictationModel {
             Paste.sendCommandV()
         }
         #endif
+
+        // Un dictado = un prompt: si ya se ha entregado, dejamos el cuadro limpio
+        // para que el siguiente dictado no se concatene con el anterior.
+        draft = (clearAfterDictation && delivers) ? "" : prompt
     }
 
     func copy(_ text: String, feedback: Bool = true) {

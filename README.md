@@ -39,15 +39,15 @@ Todo el reconocimiento se hace con el framework `Speech` de Apple en el disposit
 1. Deja PromptVoice abierta (puede estar detrás o solo en la barra de menús).
 2. Pon el foco en tu terminal o editor.
 3. **⌥Espacio** para empezar, habla, **⌥Espacio** para parar.
-4. Con *Pegar automáticamente* activo, el texto aparece escrito en tu agente. Pulsa Enter.
+4. Con *Pegar automáticamente* activo, el texto aparece escrito en tu agente y el borrador se vacía. Pulsa Enter y dicta el siguiente.
 
 En la ventana principal:
 
-- El borrador acumula dictados y se puede editar a mano.
+- Cada dictado se copia y el borrador se vacía, así el siguiente prompt no se concatena con el anterior. Todo queda en `Recientes` por si quieres recuperarlo.
 - **⌘↩** graba/para cuando la ventana tiene el foco.
 - Botones de copiar, limpiar e historial (clic en un reciente lo copia; clic derecho para borrarlo).
 - Icono en la barra de menús con acceso rápido a grabar y copiar.
-- Ajustes: idioma del dictado, atajo global, copiar al terminar y pegar automáticamente.
+- Ajustes: idioma del dictado, atajo global, copiar al terminar, vaciar el borrador y pegar automáticamente.
 
 La primera vez que dictes, macOS descarga el modelo del idioma elegido y pide permiso de micrófono.
 
@@ -159,4 +159,4 @@ MIT. Ver [LICENSE](LICENSE).
 
 ### English summary
 
-PromptVoice is a native macOS dictation app for writing prompts to coding agents. Press **⌥Space** (the shortcut is configurable), speak, press it again: the text is transcribed **on-device** with Apple's `SpeechAnalyzer`, copied to the clipboard and optionally pasted into the frontmost app. No cloud, no accounts, no dependencies. Requires macOS 26+ (Apple Silicon) and a microphone; build with Xcode 26+ (`./scripts/run.sh`). The iOS target requires iOS 26+ and a real device (the Simulator does not support on-device dictation). MIT licensed.
+PromptVoice is a native macOS dictation app for writing prompts to coding agents. Press **⌥Space** (the shortcut is configurable), speak, press it again: the text is transcribed **on-device** with Apple's `SpeechAnalyzer`, copied to the clipboard and optionally pasted into the frontmost app. The draft is cleared after each dictation so prompts do not add up. No cloud, no accounts, no dependencies. Requires macOS 26+ (Apple Silicon) and a microphone; build with Xcode 26+ (`./scripts/run.sh`). The iOS target requires iOS 26+ and a real device (the Simulator does not support on-device dictation). MIT licensed.
