@@ -3,7 +3,7 @@ import AppKit
 import Carbon.HIToolbox
 import Foundation
 
-/// Atajo global (⌥Espacio) que funciona aunque la app no tenga el foco.
+/// Atajo global configurable que funciona aunque la app no tenga el foco.
 final class GlobalHotKey {
     static let shared = GlobalHotKey()
 
@@ -11,8 +11,39 @@ final class GlobalHotKey {
     private var hotKeyRef: EventHotKeyRef?
     private var eventHandler: EventHandlerRef?
 
-    func register() {
-        guard hotKeyRef == nil else { return }
+    /// Registra la combinación. Devuelve un mensaje de error si no se pudo.
+    @discardableResult
+    func register(_ hotKey: HotKey) -> String? {
+        unregister()
+        installHandlerIfNeeded()
+
+        var ref: EventHotKeyRef?
+        let hotKeyID = EventHotKeyID(signature: OSType(0x50564F49), id: 1) // 'PVOI'
+        let status = RegisterEventHotKey(
+            hotKey.keyCode,
+            hotKey.modifiers,
+            hotKeyID,
+            GetApplicationEventTarget(),
+            0,
+            &ref
+        )
+
+        guard status == noErr, let ref else {
+            return "No se pudo registrar \(hotKey.displayString). Puede estar en uso por otra app."
+        }
+        hotKeyRef = ref
+        return nil
+    }
+
+    func unregister() {
+        if let hotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+        }
+        hotKeyRef = nil
+    }
+
+    private func installHandlerIfNeeded() {
+        guard eventHandler == nil else { return }
 
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
@@ -33,19 +64,6 @@ final class GlobalHotKey {
             Unmanaged.passUnretained(self).toOpaque(),
             &eventHandler
         )
-
-        let hotKeyID = EventHotKeyID(signature: OSType(0x564F4943), id: 1) // 'VOIC'
-        let status = RegisterEventHotKey(
-            UInt32(kVK_Space),
-            UInt32(optionKey),
-            hotKeyID,
-            GetApplicationEventTarget(),
-            0,
-            &hotKeyRef
-        )
-        if status != noErr {
-            print("Voice: no se pudo registrar ⌥Espacio (código \(status))")
-        }
     }
 }
 
@@ -76,7 +94,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 await DictationModel.shared.toggle()
             }
         }
-        GlobalHotKey.shared.register()
+
+        Task { @MainActor in
+            let model = DictationModel.shared
+            model.hotKeyError = GlobalHotKey.shared.register(model.hotKey)
+            if let error = model.hotKeyError {
+                print("PromptVoice: \(error)")
+            }
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

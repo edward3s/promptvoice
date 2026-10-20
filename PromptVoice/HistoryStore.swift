@@ -21,7 +21,7 @@ final class HistoryStore {
 
     private var fileURL: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Voice", isDirectory: true)
+            .appendingPathComponent("PromptVoice", isDirectory: true)
         try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base.appendingPathComponent("history.json")
     }

@@ -26,18 +26,39 @@ final class DictationModel {
         didSet { defaults.set(autoPaste, forKey: Keys.autoPaste) }
     }
 
+    /// Atajo global para empezar/parar el dictado (solo macOS).
+    var hotKey: HotKey {
+        didSet {
+            defaults.set(Int(hotKey.keyCode), forKey: Keys.hotKeyKeyCode)
+            defaults.set(Int(hotKey.modifiers), forKey: Keys.hotKeyModifiers)
+            #if os(macOS)
+            hotKeyError = GlobalHotKey.shared.register(hotKey)
+            #endif
+        }
+    }
+    var hotKeyError: String?
+
     private let defaults = UserDefaults.standard
 
     private enum Keys {
         static let localeID = "localeID"
         static let autoCopy = "autoCopy"
         static let autoPaste = "autoPaste"
+        static let hotKeyKeyCode = "hotKeyKeyCode"
+        static let hotKeyModifiers = "hotKeyModifiers"
     }
 
     private init() {
         localeID = defaults.string(forKey: Keys.localeID) ?? ""
         autoCopy = defaults.object(forKey: Keys.autoCopy) as? Bool ?? true
         autoPaste = defaults.object(forKey: Keys.autoPaste) as? Bool ?? true
+
+        if let keyCode = defaults.object(forKey: Keys.hotKeyKeyCode) as? Int,
+           let modifiers = defaults.object(forKey: Keys.hotKeyModifiers) as? Int {
+            hotKey = HotKey(keyCode: UInt32(keyCode), modifiers: UInt32(modifiers))
+        } else {
+            hotKey = .default
+        }
     }
 
     var activeLocale: Locale {

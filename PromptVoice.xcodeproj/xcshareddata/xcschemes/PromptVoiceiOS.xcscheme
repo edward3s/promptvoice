@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B10000000000000000000006"
-               BuildableName = "Voice.app"
-               BlueprintName = "VoiceMac"
-               ReferencedContainer = "container:Voice.xcodeproj">
+               BlueprintIdentifier = "A10000000000000000000006"
+               BuildableName = "PromptVoice.app"
+               BlueprintName = "PromptVoiceiOS"
+               ReferencedContainer = "container:PromptVoice.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -44,10 +44,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B10000000000000000000006"
-            BuildableName = "Voice.app"
-            BlueprintName = "VoiceMac"
-            ReferencedContainer = "container:Voice.xcodeproj">
+            BlueprintIdentifier = "A10000000000000000000006"
+            BuildableName = "PromptVoice.app"
+            BlueprintName = "PromptVoiceiOS"
+            ReferencedContainer = "container:PromptVoice.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -61,10 +61,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B10000000000000000000006"
-            BuildableName = "Voice.app"
-            BlueprintName = "VoiceMac"
-            ReferencedContainer = "container:Voice.xcodeproj">
+            BlueprintIdentifier = "A10000000000000000000006"
+            BuildableName = "PromptVoice.app"
+            BlueprintName = "PromptVoiceiOS"
+            ReferencedContainer = "container:PromptVoice.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -4,11 +4,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 xcodebuild \
-  -project Voice.xcodeproj \
-  -scheme VoiceMac \
+  -project PromptVoice.xcodeproj \
+  -scheme PromptVoice \
   -configuration Debug \
   -destination 'platform=macOS' \
   -derivedDataPath build-mac \
   build
 
-echo "App: $(pwd)/build-mac/Build/Products/Debug/Voice.app"
+echo "App: $(pwd)/build-mac/Build/Products/Debug/PromptVoice.app"

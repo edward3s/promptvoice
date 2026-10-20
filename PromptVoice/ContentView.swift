@@ -1,5 +1,9 @@
 import SwiftUI
 
+#if os(macOS)
+import AppKit
+#endif
+
 struct ContentView: View {
     @Bindable var model: DictationModel
     @State private var selection: TextSelection?
@@ -46,7 +50,7 @@ struct ContentView: View {
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text("Voice")
+            Text("PromptVoice")
                 .font(.system(size: 30, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
@@ -152,7 +156,7 @@ struct ContentView: View {
         switch engine.phase {
         case .idle:
             #if os(macOS)
-            return "Listo · ⌥Espacio para dictar · \(languageName)"
+            return "Listo · \(model.hotKey.displayString) para dictar · \(languageName)"
             #else
             return "Listo · \(languageName)"
             #endif
@@ -371,9 +375,42 @@ struct SettingsView: View {
                 }
 
                 #if os(macOS)
+                Section("Atajo global") {
+                    HStack {
+                        Text("Combinación")
+                        Spacer()
+                        Button {
+                            capturingHotKey ? stopCapture() : startCapture()
+                        } label: {
+                            Text(capturingHotKey ? "Pulsa la combinación…" : model.hotKey.displayString)
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(.white.opacity(0.09), in: RoundedRectangle(cornerRadius: 7))
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    if capturingHotKey {
+                        Text("Pulsa ⌘, ⌥ o ⌃ junto con una tecla. Esc para cancelar.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if let error = model.hotKeyError {
+                        Text(error)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                    }
+
+                    Button("Restaurar ⌥Espacio") {
+                        model.hotKey = .default
+                    }
+                }
+
                 Section("Automatización") {
                     Toggle("Pegar automáticamente en la app activa", isOn: $model.autoPaste)
-                    Text("Atajo global: ⌥Espacio. El texto se pega en la app que esté delante (tu agente) sin cambiar de ventana.")
+                    Text("El texto se pega en la app que esté delante (tu agente) sin cambiar de ventana.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
 
@@ -398,7 +435,49 @@ struct SettingsView: View {
         }
         .preferredColorScheme(.dark)
         #if os(macOS)
-        .frame(width: 420, height: 360)
+        .frame(width: 420, height: 430)
+        .onDisappear { stopCapture() }
         #endif
     }
+
+    #if os(macOS)
+    @State private var capturingHotKey = false
+    @State private var keyMonitor: Any?
+
+    private func startCapture() {
+        guard keyMonitor == nil else { return }
+        capturingHotKey = true
+        model.hotKeyError = nil
+
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == 53 { // Esc
+                stopCapture()
+                return nil
+            }
+
+            var modifiers: UInt32 = 0
+            if event.modifierFlags.contains(.command) { modifiers |= HotKeyModifier.command.rawValue }
+            if event.modifierFlags.contains(.option) { modifiers |= HotKeyModifier.option.rawValue }
+            if event.modifierFlags.contains(.control) { modifiers |= HotKeyModifier.control.rawValue }
+            if event.modifierFlags.contains(.shift) { modifiers |= HotKeyModifier.shift.rawValue }
+
+            guard modifiers & HotKeyModifier.essential != 0 else {
+                NSSound.beep()
+                return nil
+            }
+
+            model.hotKey = HotKey(keyCode: UInt32(event.keyCode), modifiers: modifiers)
+            stopCapture()
+            return nil
+        }
+    }
+
+    private func stopCapture() {
+        if let keyMonitor {
+            NSEvent.removeMonitor(keyMonitor)
+        }
+        keyMonitor = nil
+        capturingHotKey = false
+    }
+    #endif
 }

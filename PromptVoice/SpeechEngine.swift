@@ -43,7 +43,7 @@ final class SpeechEngine {
 
         do {
             guard await Platform.requestMicrophonePermission() else {
-                throw VoiceError.microphoneDenied
+                throw PromptVoiceError.microphoneDenied
             }
 
             let transcriber = try await makeTranscriber(localeIdentifier: localeIdentifier)
@@ -56,13 +56,13 @@ final class SpeechEngine {
             #endif
 
             #if os(macOS)
-            guard AVCaptureDevice.default(for: .audio) != nil else { throw VoiceError.noMicrophone }
+            guard AVCaptureDevice.default(for: .audio) != nil else { throw PromptVoiceError.noMicrophone }
             #endif
 
             let audio = AVAudioEngine()
             let input = audio.inputNode
             let naturalFormat = input.outputFormat(forBus: 0)
-            guard naturalFormat.sampleRate > 0 else { throw VoiceError.noMicrophone }
+            guard naturalFormat.sampleRate > 0 else { throw PromptVoiceError.noMicrophone }
 
             var targetFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
                 compatibleWith: [transcriber],
@@ -71,14 +71,14 @@ final class SpeechEngine {
             if targetFormat == nil {
                 targetFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
             }
-            guard let targetFormat else { throw VoiceError.audioSetup }
+            guard let targetFormat else { throw PromptVoiceError.audioSetup }
 
             let converter: AVAudioConverter?
             if naturalFormat == targetFormat {
                 converter = nil
             } else {
                 converter = AVAudioConverter(from: naturalFormat, to: targetFormat)
-                guard converter != nil else { throw VoiceError.audioSetup }
+                guard converter != nil else { throw PromptVoiceError.audioSetup }
             }
 
             let (stream, continuation) = AsyncStream.makeStream(of: AnalyzerInput.self)
@@ -131,7 +131,7 @@ final class SpeechEngine {
             resultsTask = nil
             await teardown()
             phase = .idle
-            errorMessage = (error as? VoiceError)?.message ?? error.localizedDescription
+            errorMessage = (error as? PromptVoiceError)?.message ?? error.localizedDescription
         }
     }
 
@@ -188,13 +188,13 @@ final class SpeechEngine {
     private func makeTranscriber(localeIdentifier: String) async throws -> DictationTranscriber {
         let requested = Locale(identifier: localeIdentifier)
         guard let locale = await DictationTranscriber.supportedLocale(equivalentTo: requested) else {
-            throw VoiceError.localeNotSupported(localeIdentifier)
+            throw PromptVoiceError.localeNotSupported(localeIdentifier)
         }
 
         let transcriber = DictationTranscriber(locale: locale, preset: .progressiveLongDictation)
         var status = await AssetInventory.status(forModules: [transcriber])
 
-        if status == .unsupported { throw VoiceError.localeNotSupported(localeIdentifier) }
+        if status == .unsupported { throw PromptVoiceError.localeNotSupported(localeIdentifier) }
 
         if status != .installed, let request = try? await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
             try? await request.downloadAndInstall()
@@ -209,7 +209,7 @@ final class SpeechEngine {
             waited += 1
         }
 
-        guard status != .downloading, status != .unsupported else { throw VoiceError.modelNotReady }
+        guard status != .downloading, status != .unsupported else { throw PromptVoiceError.modelNotReady }
 
         let reserved = await AssetInventory.reservedLocales
         if !reserved.contains(locale) {
@@ -283,7 +283,7 @@ final class SpeechEngine {
     }
 }
 
-enum VoiceError: Error {
+enum PromptVoiceError: Error {
     case microphoneDenied
     case noMicrophone
     case audioSetup

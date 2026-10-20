@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct VoiceApp: App {
+struct PromptVoiceApp: App {
     @State private var model = DictationModel.shared
 
     #if os(macOS)
@@ -9,7 +9,7 @@ struct VoiceApp: App {
     #endif
 
     var body: some Scene {
-        WindowGroup("Voice") {
+        WindowGroup("PromptVoice") {
             ContentView(model: model)
                 .preferredColorScheme(.dark)
                 #if os(macOS)
@@ -33,7 +33,7 @@ struct VoiceApp: App {
 
             Divider()
 
-            Button("Abrir Voice") {
+            Button("Abrir PromptVoice") {
                 NSApp.activate(ignoringOtherApps: true)
                 NSApp.windows.first { $0.canBecomeKey }?.makeKeyAndOrderFront(nil)
             }
